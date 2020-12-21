@@ -23,7 +23,9 @@ function preload_images() {
     bean_img.onload = function(){ 
         console.log("Bean image preloaded.");
     }
-    bean_img.src = "assets/bean.png"
+    bean_img.src = "assets/bean_rot.png"
+    var rotateAngle = 90;
+    bean_img.setAttribute("style", "transform: rotate(" + rotateAngle + "deg)");
 }
 
 function add_event_listener_to_slider() {
@@ -121,20 +123,23 @@ function update_field_representation(gamestate) {
                 var coords0 = parseInt(coords[0]);
                 var coords1 = parseInt(coords[1]);
                 var num_rows = parseInt(stones / 2);
-                var last_in_the_middle = (stones % 2 == 1);
-                var y_pixels_between_rows = 30;
+                var last_in_the_middle = (stones % 2 == 1);                
+                var scale_factor = 0.5;
+                var width_of_bean = 90 * scale_factor;
+                var height_of_bean = 50 * scale_factor;
+                var y_pixels_between_rows = height_of_bean;
                 for (let index = 0; index < stones; index++) {
                     // console.log("Drawing bean at: " + (parseInt(coords0) + index*10) + ", " + (coords1+ index*10));
                     var curr_row = parseInt(index / 2);
                     var put_in_the_middle = last_in_the_middle && (index == stones - 1);
                     
                     if (put_in_the_middle) {
-                        ctx.drawImage(img, coords0, coords1 + (curr_row-(num_rows-1))*y_pixels_between_rows, 40, 30); 
+                        ctx.drawImage(img, coords0, coords1 + (curr_row-(num_rows-1))*y_pixels_between_rows, width_of_bean, height_of_bean); 
                     } else {
                         if (index % 2 == 0) { // draw left
-                            ctx.drawImage(img, coords0-50, coords1 + (curr_row-(num_rows-1))*y_pixels_between_rows, 40, 30); 
+                            ctx.drawImage(img, coords0-(1.3*width_of_bean), coords1 + (curr_row-(num_rows-1))*y_pixels_between_rows, width_of_bean, height_of_bean); 
                         } else {
-                            ctx.drawImage(img, coords0, coords1 + (curr_row-(num_rows-1))*y_pixels_between_rows, 40, 30); 
+                            ctx.drawImage(img, coords0-width_of_bean/4, coords1 + (curr_row-(num_rows-1))*y_pixels_between_rows, width_of_bean, height_of_bean); 
                         }
                     }
                 }                
