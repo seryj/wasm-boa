@@ -1,3 +1,7 @@
+#![feature(test)]
+
+mod ai;
+
 use wasm_bindgen::__rt::std::time::Instant;
 
 fn main() {
@@ -7,7 +11,9 @@ fn main() {
     let mut unentschieden = 0;
     for _ in 0..5 {
         let game = boa::GameState::default(); // beginning of the game
-        let winner_distr = boa::game_playout(game, None, Some(1000));
+        let ai = ai::AI::new();
+
+        let winner_distr = ai.evaluate_state_for_next_move(&game, 0, 1000);
 
         match winner_distr {
             Ok(winner) => {

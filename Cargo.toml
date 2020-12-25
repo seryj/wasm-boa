@@ -30,6 +30,7 @@ crate-type = ["cdylib", "rlib"]
 # disabled by setting it to `false`
 [package.metadata.wasm-pack.profile.release]
 wasm-opt = false
+#wasm-opt = ['-s']
 
 [package.metadata.wasm-pack.profile.dev]
 # Should `wasm-opt` be used to further optimize the wasm binary generated after
@@ -40,4 +41,7 @@ wasm-opt = false
 # be set to an array of strings which are explicit arguments to pass to
 # `wasm-opt`. For example `['-Os']` would optimize for size while `['-O4']`
 # would execute very expensive optimizations passes
-wasm-opt = ['-O']
+wasm-opt = ['-s']
+
+[profile.release]
+lto = true

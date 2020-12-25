@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>Boa</title>
+  </head>
+  <body>
+    <link type="text/css" rel="stylesheet" href="style.css">
+
+    <noscript>This page contains webassembly and javascript content, please enable javascript in your browser.</noscript>
+    <script src="../bootstrap.js"></script>    
+
+    <div class="centered">
+
+    <div class="slidecontainer">
+      <div id="info_text_playout_number">Number playouts to think: </div>
+      <input type="range" min="100" max="5000" value="50" class="slider" id="playout_range">
+    </div>
+
+    <div id="con">  
+      <canvas id="myCanvas" width="1000" height="651"></canvas>
+      <img src="images/board_worse_quality2.jpg" alt="Board background" usemap="#background"  id="boardimg">    
+      <map name="background">
+        <!-- Player 2 -->
+        <area shape="circle" coords="69,82,50" alt="Cup of coffee"  id="ap2_pos15">
+        <area shape="circle" coords="186,82,50" alt="Cup of coffee" id="ap2_pos14">
+        <area shape="circle" coords="315,82,50" alt="Cup of coffee" id="ap2_pos13">
+        <area shape="circle" coords="440,82,50" alt="Cup of coffee" id="ap2_pos12">
+        <area shape="circle" coords="565,82,50" alt="Cup of coffee" id="ap2_pos11">
+        <area shape="circle" coords="693,82,50" alt="Cup of coffee" id="ap2_pos10">
+        <area shape="circle" coords="822,82,50" alt="Cup of coffee" id="ap2_pos9">
+        <area shape="circle" coords="940,82,50" alt="Cup of coffee" id="ap2_pos8">
+        <area shape="circle" coords="69,238,50" alt="Cup of coffee" id="ap2_pos0">
+        <area shape="circle" coords="186,238,50" alt="Cup of coffee" id="ap2_pos1">
+        <area shape="circle" coords="315,238,50" alt="Cup of coffee" id="ap2_pos2">
+        <area shape="circle" coords="440,238,50" alt="Cup of coffee" id="ap2_pos3">
+        <area shape="circle" coords="565,238,50" alt="Cup of coffee" id="ap2_pos4">
+        <area shape="circle" coords="693,238,50" alt="Cup of coffee" id="ap2_pos5">
+        <area shape="circle" coords="822,238,50" alt="Cup of coffee" id="ap2_pos6">
+        <area shape="circle" coords="940,238,50" alt="Cup of coffee" id="ap2_pos7">
+  
+        <!-- Player 1 -->
+        <area shape="circle" coords="69,416,50"  alt="Game field" id="ap1_pos0">
+        <area shape="circle" coords="186,416,50" alt="Game field" id="ap1_pos1">
+        <area shape="circle" coords="315,416,50" alt="Game field" id="ap1_pos2">
+        <area shape="circle" coords="440,416,50" alt="Game field" id="ap1_pos3">
+        <area shape="circle" coords="565,416,50" alt="Game field" id="ap1_pos4">
+        <area shape="circle" coords="693,416,50" alt="Game field" id="ap1_pos5">
+        <area shape="circle" coords="822,416,50" alt="Game field" id="ap1_pos6">
+        <area shape="circle" coords="940,416,50" alt="Game field" id="ap1_pos7">
+        
+        <area shape="circle" coords="69,565,50" alt="Game field"  id="ap1_pos15">
+        <area shape="circle" coords="186,565,50" alt="Game field" id="ap1_pos14">
+        <area shape="circle" coords="315,565,50" alt="Game field" id="ap1_pos13">
+        <area shape="circle" coords="440,565,50" alt="Game field" id="ap1_pos12">
+        <area shape="circle" coords="565,565,50" alt="Game field" id="ap1_pos11">
+        <area shape="circle" coords="693,565,50" alt="Game field" id="ap1_pos10">
+        <area shape="circle" coords="822,565,50" alt="Game field" id="ap1_pos9">
+        <area shape="circle" coords="940,565,50" alt="Game field" id="ap1_pos8">
+        
+      </map>
+    </div> 
+    <div>
+      Thinking progress: <progress id="ai_progress" value="0" max="100"></progress>
+    </div>
+
+    <button type="button" id="new_game_button">Start new game</button>
+    <input type="checkbox" id="enable_debug_output" checked="false">Enable debug output.</input>
+
+    <div id="debug_output_id">
+      Debug output:
+      <form id="gamefield">
+        <div class="divTable">
+              <div class="divRow">
+                <div class="divCell"><button type="button" id="p2_pos15">00</button></div>
+                <div class="divCell"><button type="button" id="p2_pos14">00</button></div>
+                <div class="divCell"><button type="button" id="p2_pos13">00</button></div>
+                <div class="divCell"><button type="button" id="p2_pos12">00</button></div>
+                <div class="divCell"><button type="button" id="p2_pos11">00</button></div>
+                <div class="divCell"><button type="button" id="p2_pos10">00</button></div>
+                <div class="divCell"><button type="button" id="p2_pos9">00</button></div>
+                <div class="divCell"><button type="button" id="p2_pos8">00</button></div>
+              </div>
+              <div class="divRow">
+                <div class="divCell"><button type="button" id="p2_pos0">00</button></div>
+                <div class="divCell"><button type="button" id="p2_pos1">00</button></div>
+                <div class="divCell"><button type="button" id="p2_pos2">00</button></div>
+                <div class="divCell"><button type="button" id="p2_pos3">00</button></div>
+                <div class="divCell"><button type="button" id="p2_pos4">00</button></div>
+                <div class="divCell"><button type="button" id="p2_pos5">00</button></div>
+                <div class="divCell"><button type="button" id="p2_pos6">00</button></div>
+                <div class="divCell"><button type="button" id="p2_pos7">00</button></div>
+              </div>
+              <div>--------------------------------------------------------------------</div>
+              <div class="divRow">
+                <div class="divCell"><button type="button" id="p1_pos0">00</button></div>
+                <div class="divCell"><button type="button" id="p1_pos1">00</button></div>
+                <div class="divCell"><button type="button" id="p1_pos2">00</button></div>
+                <div class="divCell"><button type="button" id="p1_pos3">00</button></div>
+                <div class="divCell"><button type="button" id="p1_pos4">00</button></div>
+                <div class="divCell"><button type="button" id="p1_pos5">00</button></div>
+                <div class="divCell"><button type="button" id="p1_pos6">00</button></div>
+                <div class="divCell"><button type="button" id="p1_pos7">00</button></div>
+              </div>
+              <div class="divRow">
+                <div class="divCell"><button type="button" id="p1_pos15">00</button></div>
+                <div class="divCell"><button type="button" id="p1_pos14">00</button></div>
+                <div class="divCell"><button type="button" id="p1_pos13">00</button></div>
+                <div class="divCell"><button type="button" id="p1_pos12">00</button></div>
+                <div class="divCell"><button type="button" id="p1_pos11">00</button></div>
+                <div class="divCell"><button type="button" id="p1_pos10">00</button></div>
+                <div class="divCell"><button type="button" id="p1_pos9">00</button></div>
+                <div class="divCell"><button type="button" id="p1_pos8">00</button></div>
+              </div>
+
+        </div>
+    </form>
+    <pre id="boa-viz"></pre>
+  </div>
+  </div>
+
+  </body>
+</html>

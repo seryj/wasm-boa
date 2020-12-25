@@ -1,0 +1,77 @@
+.divTable
+{
+    display:  table;
+    width:auto;
+    background-color:#eee;
+    border:1px solid  #666666;
+    border-spacing:5px;/*cellspacing:poor IE support for  this*/
+   /* border-collapse:separate;*/
+}
+
+.divRow
+{
+   display:table-row;
+   width:auto;
+}
+
+.divCell
+{
+    float:left;/*fix for  buggy browsers*/
+    display:table-column;
+    width:100px;
+    background-color:#ccc;
+}
+
+#myCanvas
+{
+    pointer-events: none;       /* make the canvas transparent to the mouse - needed since canvas is position infront of image */
+    position:absolute;
+    z-index: 2;
+}
+
+#con{
+  overflow: hidden;
+  height: 700px;
+  width: 100%;
+}
+#img{
+  width:100%;
+  height:100%;
+  position:relative;
+  z-index: 3;
+}
+
+#debug_output_id {        
+  visibility: hidden;
+}
+
+.centered {
+  width: 1000px;
+  margin: 0 auto;
+}
+
+/* For showing the spinner - how far the AI is. */
+#loader {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  z-index: 1;
+  width: 120px;
+  height: 120px;
+  margin: -76px 0 0 -76px;
+  border: 16px solid #f3f3f3;
+  border-radius: 50%;
+  border-top: 16px solid #3498db;
+  -webkit-animation: spin 2s linear infinite;
+  animation: spin 2s linear infinite;
+}
+
+@-webkit-keyframes spin {
+  0% { -webkit-transform: rotate(0deg); }
+  100% { -webkit-transform: rotate(360deg); }
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
