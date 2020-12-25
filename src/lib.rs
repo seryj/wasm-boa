@@ -398,6 +398,8 @@ impl GameState {
         }
     }
 
+    /// Returns the number of stones at specified position.
+    /// Error is thrown is position is outside of the field or if wrong player ID is provided.
     pub fn get_number_stones_at(&self, player: usize, position: usize) -> Result<u8, JsValue> {
         assert!(position < 2 * LENGTH_OF_FIELD);
         assert!(player < 2);
