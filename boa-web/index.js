@@ -215,6 +215,7 @@ function click_on_cell(event) {
                             }
 
                             const ai_progress = document.getElementById("ai_progress");
+                            const chances_to_win_elem = document.getElementById("chances_to_win");
                             ai_progress.value = 0;
                             var diff_wins_distribution = null;
 
@@ -248,7 +249,7 @@ function click_on_cell(event) {
                                     let max_index = 0;
                                     for (let index = 0; index < diff_wins_distribution.length; index++) {
                                         const value_at_index = diff_wins_distribution[index];
-                                        if (value_at_index > max_value && newstate.get_number_stones_at(1, index)) {
+                                        if ((value_at_index > max_value) && (newstate.get_number_stones_at(1, index) > 0)) {
                                             max_value = value_at_index;
                                             max_index = index;
                                         }
@@ -261,6 +262,19 @@ function click_on_cell(event) {
                                     }
                                     currstate = new_state_after_ai_move;
                                     console.log("After doing AI step, the state is: " + new_state_after_ai_move.render());
+
+                                    var win_chances_ai = 0;
+                                    var win_chances_player = 0;
+                                    for (let index = 0; index < diff_wins_distribution.length; index++) {
+                                        const v = diff_wins_distribution[index];
+                                        if (v < 0) {
+                                            win_chances_player += diff_wins_distribution[index];
+                                        } else {
+                                            win_chances_ai += diff_wins_distribution[index];
+                                        }
+
+                                    }
+                                    chances_to_win_elem.innerHTML = "Chances to win: (Computer) " + win_chances_ai + " vs " + (-win_chances_player) + " (Player)" 
                                 }
                             }
                                                 
