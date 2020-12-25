@@ -140,51 +140,6 @@ impl OnePlayersField {
             curr_pos,
         ));
     }
-
-    fn make_mut_move_from(&mut self, position: usize) -> Result<usize, GameError> {
-        if position > self.cells.len() {
-            return Err(GameError::PositionOutsideField);
-        }
-
-        if self.cells[position] <= 0 {
-            return Err(GameError::CellEmpty);
-        }
-
-        let mut new_field_state = self.cells.clone();
-        let mut curr_pos = position;
-        let mut stones_in_the_hand = self.cells[curr_pos];
-        new_field_state[curr_pos] = 0;
-        let num_cells = self.cells.len();
-        loop {
-            curr_pos = if self.direction == Direction::Right {
-                (curr_pos + 1) % num_cells
-            } else {
-                (curr_pos + (2 * LENGTH_OF_FIELD - 1)) % num_cells // corresponds to make a step "backward"
-            };
-
-            new_field_state[curr_pos] += 1;
-            stones_in_the_hand -= 1;
-            if (stones_in_the_hand == 0) && (new_field_state[curr_pos] == 1) {
-                break;
-            } else if (stones_in_the_hand == 0) && (new_field_state[curr_pos] > 1) {
-                if self
-                    .cells
-                    .iter()
-                    .zip(new_field_state.iter())
-                    .all(|(v1, v2)| *v1 == *v2)
-                {
-                    return Err(GameError::RepeatingPosition);
-                }
-
-                stones_in_the_hand = new_field_state[curr_pos];
-                new_field_state[curr_pos] = 0;
-            }
-        }
-
-        self.cells = new_field_state;
-
-        return Ok(curr_pos);
-    }
 }
 
 impl Default for GameState {
@@ -289,66 +244,6 @@ impl GameState {
                     game_over: game_over,
                     move_statistic: move_statistic,
                 })
-            }
-        }
-    }
-
-    /// Makes a move for the current user and returns a copy of the new GameState.
-    fn make_move_mut(&mut self, position: usize) -> Result<(), GameError> {
-        let other_player: usize = (self.curr_player as usize + 1) % 2;
-        let curr_player: usize = self.curr_player as usize;
-
-        let new_field_state_of_current_player =
-            self.fields_of_players[curr_player].make_move_from(position);
-
-        match new_field_state_of_current_player {
-            Err(e) => return Err(e),
-            Ok(new_field_and_last_location_curr_user) => {
-                // Now, remove stones from the other player if needed
-                let mut other_player_field = self.fields_of_players[other_player].clone();
-                let mut removed_stones_of_opponent: u8 = 0;
-
-                if new_field_and_last_location_curr_user.1 < LENGTH_OF_FIELD {
-                    if self.fields_of_players[other_player].cells
-                        [new_field_and_last_location_curr_user.1]
-                        > 0
-                    {
-                        // remove stones
-                        removed_stones_of_opponent +=
-                            other_player_field.cells[new_field_and_last_location_curr_user.1];
-                        removed_stones_of_opponent += other_player_field.cells
-                            [2 * LENGTH_OF_FIELD - new_field_and_last_location_curr_user.1 - 1];
-
-                        other_player_field.cells[new_field_and_last_location_curr_user.1] = 0;
-                        other_player_field.cells
-                            [2 * LENGTH_OF_FIELD - new_field_and_last_location_curr_user.1 - 1] = 0;
-                    }
-                }
-
-                let fields_of_both_players = if curr_player == 0 {
-                    [
-                        new_field_and_last_location_curr_user.0.clone(),
-                        other_player_field,
-                    ]
-                } else {
-                    [
-                        other_player_field,
-                        new_field_and_last_location_curr_user.0.clone(),
-                    ]
-                };
-
-                let move_statistic = MoveStatistic {
-                    stones_of_opponent_removed: removed_stones_of_opponent,
-                    last_move_position: new_field_and_last_location_curr_user.1,
-                };
-
-                let game_over = self.game_over_internal(&fields_of_both_players);
-                self.fields_of_players = fields_of_both_players;
-                self.curr_player = other_player as u8;
-                self.game_over = game_over;
-                self.move_statistic = move_statistic;
-
-                Ok(())
             }
         }
     }
