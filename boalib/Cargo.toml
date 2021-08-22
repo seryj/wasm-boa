@@ -1,0 +1,63 @@
+[package]
+name = "boalib"
+version = "0.1.0"
+authors = ["seryj <lapuh@gmx.de>"]
+edition = "2018"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dev-dependencies]
+wasm-bindgen-test = "0.3.0"
+
+[dependencies]
+getrandom = { version = "0.2", features = ["js"] } # needed to be able to compile for WASM
+wasm-bindgen = "0.2"
+serde-wasm-bindgen = "0.3.0"
+rand = "0.8.4"
+console_error_panic_hook = "0.1.6"
+js-sys = "0.3"
+instant = { version = "0.1", features = [ "wasm-bindgen", "inaccurate" ] }
+serde = "1.0"
+serde_json = "1.0"
+serde_repr = "0.1.7"
+zmq = "0.9"
+
+[[bin]]
+path = "src/main.rs"
+name = "boabin"
+
+[lib]
+path = "src/lib.rs"
+name = "boalib"
+crate-type = ["cdylib", "rlib"]
+
+# `wasm-opt` is on by default in for the release profile, but it can be
+# disabled by setting it to `false`
+[package.metadata.wasm-pack.profile.release]
+wasm-opt = false
+#wasm-opt = ['-s']
+
+[package.metadata.wasm-pack.profile.dev]
+# Should `wasm-opt` be used to further optimize the wasm binary generated after
+# the Rust compiler has finished? Using `wasm-opt` can often further decrease
+# binary size or do clever tricks that haven't made their way into LLVM yet.
+#
+# Configuration is set to `false` by default for the dev profile, but it can
+# be set to an array of strings which are explicit arguments to pass to
+# `wasm-opt`. For example `['-Os']` would optimize for size while `['-O4']`
+# would execute very expensive optimizations passes
+wasm-opt = ['-s']
+
+[profile.release]
+lto = true
+
+[dependencies.web-sys]
+features = [
+    "BinaryType",
+    "Blob",
+    "ErrorEvent",
+    "FileReader",
+    "MessageEvent",
+    "ProgressEvent",
+    "WebSocket",
+]

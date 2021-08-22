@@ -2,15 +2,12 @@ import init from "./pkg/boa.js";
 import * as wasm from "./pkg/boa.js";
 
 const FIELD_WIDTH = 8;     // number of fields in a single row
-const PLAYABLE_PLAYER = 1; // how many human players are there? Currenty, only PLAYABLE_PLAYER = 1 is supported.
-
-let NUMBER_PLAYOUTS = 2000; // how many random playouts will be done from every field by AI.
-
-let ai = null;          // ai object from the WASM code
-let currstate = null;   // current game state object
-let wasmobj = null;     // WASM object containingi the memory
+let player_unique_id = null;
+let curr_game_state = null;
 
 let bean_img = new Image(); // preloaded bean image 
+
+websocket = null;
 
 
 initialize_wasm_object();
@@ -19,9 +16,7 @@ preload_images();
 
 add_event_listener_to_buttons();
 
-add_event_listener_to_slider();
-
-// Check settigns for debug outptu
+// Check settigns for debug output
 debug_output() 
 
 /**
@@ -35,6 +30,44 @@ async function initialize_wasm_object() {
     currstate = new wasm.GameState();
 }
 
+function connect_to_server(url) {
+    url = "wss://localhots:9090";
+    websocket = new WebSocket(url, protocols);
+
+    websocket.onopen = function(event) {
+        // On initial connection, the server sends will notify us with a message with a random ID which we will 
+        // use for identification
+        websocket.send(JSON.stringify(
+            {
+                "event": "wanna play"
+            }
+        ));
+    }
+
+    websocket.onmessage = function (event) {
+        console.log(event.data);
+        var server_msg = JSON.parse(event.data);
+
+        if (server_msg['msg_type'] == "INIT_CONN") {
+            player_unique_id = parseInt(server_msg["unique_id"]);
+        } else if (server_msg['msg_type'] == "PLAYOUT") {
+            other_players_move = parseInt(server_msg["move"]);
+            curr_game_state = server_msg["gamestate"]
+        }
+    }
+}
+
+function send_move(position) {
+    if ((websocket != null) && (player_unique_id != null)) {
+        var msg = {
+            player_id: player_unique_id,
+            move: position
+        };
+        websocket.send(JSON.stringify(msg));
+    }
+}
+
+
 /**
  * Don't remember where I got the got from but it should preload bean images such that they are not loaded every time they need to be drawn.
  */
@@ -47,44 +80,32 @@ function preload_images() {
     bean_img.setAttribute("style", "transform: rotate(" + rotateAngle + "deg)");
 }
 
-/**
- * Adds event listener to the slides which updates number of playouts of the AI.
- */
-function add_event_listener_to_slider() {
-    var slider = document.getElementById("playout_range");
-    var information_text = document.getElementById("info_text_playout_number");
-    slider.value = NUMBER_PLAYOUTS;
-    information_text.innerHTML =  "Number playouts to think: " + NUMBER_PLAYOUTS;
-    slider.oninput = function() {
-        NUMBER_PLAYOUTS = this.value;
-        information_text.innerHTML =  "Number playouts to think: " + NUMBER_PLAYOUTS;
-    }
-}
 
 /**
  * Adds click, mouseover and mouseout event listeneres to the buttons in the debug output and to the map shapes. Moreover, to all
  * other buttons, checkboxes, etc..
  */
 function add_event_listener_to_buttons() {    
-    for (let player = 0; player < PLAYABLE_PLAYER; player++) {
-        for (let position = 0; position < 2*FIELD_WIDTH; position++) {
-            var elemid = '#p' + (player+1) + '_pos' + position;
-            // console.log("Adding event listener for button " + elemid);
-            document.querySelector(elemid).addEventListener('click', click_on_cell);
-            document.querySelector(elemid).addEventListener('mouseover', mouse_over_cell);
-            document.querySelector(elemid).addEventListener('mouseout', mouse_out_of_cell);
 
-            elemid = '#ap' + (player+1) + '_pos' + position;
-            // console.log("Adding event listener for button " + elemid);
-            document.querySelector(elemid).addEventListener('click', click_on_cell);
-            document.querySelector(elemid).addEventListener('mouseover', mouse_over_cell);
-            document.querySelector(elemid).addEventListener('mouseout', mouse_out_of_cell);
-        }
+    for (let position = 0; position < 2*FIELD_WIDTH; position++) {
+        var elemid = '#p1_pos' + position;
+        // console.log("Adding event listener for button " + elemid);
+        document.querySelector(elemid).addEventListener('click', click_on_cell);
+        document.querySelector(elemid).addEventListener('mouseover', mouse_over_cell);
+        document.querySelector(elemid).addEventListener('mouseout', mouse_out_of_cell);
+
+        elemid = '#ap1_pos' + position;
+        // console.log("Adding event listener for button " + elemid);
+        document.querySelector(elemid).addEventListener('click', click_on_cell);
+        document.querySelector(elemid).addEventListener('mouseover', mouse_over_cell);
+        document.querySelector(elemid).addEventListener('mouseout', mouse_out_of_cell);
     }
+
     // document.querySelector('#nextmove').addEventListener('click', next_move);
 
     document.querySelector('#new_game_button').addEventListener('click', start_new_game);
     document.querySelector('#enable_debug_output').addEventListener('change', debug_output);
+    document.querySelector('#connect_to_server_btn').addEventListener('click', connect_to_server);
 }
 
 /**
@@ -145,10 +166,6 @@ function get_color(num_stones) {
  * @param {*} gamestate Gamestate that should be shown on the UI.
  */
 function update_field_representation(gamestate) {
-    const pre = document.getElementById("boa-viz");
-    console.log("Updating game field");
-    pre.textContent = gamestate.render();
-
     var c = document.getElementById("myCanvas");
     var img = document.getElementById("boardimg");
     c.style.position = "absolute";
@@ -162,7 +179,7 @@ function update_field_representation(gamestate) {
     for (let player = 0; player < 2; player++) {
         for (let position = 0; position < 2*FIELD_WIDTH; position++) {
             
-                // Update information in the buttongs
+                // Update information in the buttons
                 var elemid = '#p' + (player+1) + '_pos' + position;
                 var elem = document.querySelector(elemid);
                 var stones = gamestate.get_number_stones_at(player, position);
@@ -230,7 +247,7 @@ function click_on_cell(event) {
             try {
                 // -------------------
                 // Here, we make the move of the player.
-                let newstate = currstate.make_move_wasm(position);
+                websocket.send(position);
                 update_field_representation(newstate);
                 if (newstate.game_over()) {
                     alert("Game over! Congratulations, you won!");
@@ -242,99 +259,10 @@ function click_on_cell(event) {
                 // Here, the block comes, where AI evaluates a move and the actual move is done.
                 if (currstate != null && !currstate.game_over()) {                    
                     try {
-                        // Now, AI makes a move
-                        // console.log("Before doing AI step, the state is: " + currstate.render());                            
-                        // To show the progress, we do not calculate all steps at once but by small batches. This allows us to update the progress bar inbetween.
-                        // And due to the current implemententation which does not do a real Monte Carlo search, it is ok like this.
-                        var num_batches =  100; // 1 batch per 1% of progress
-                        var playouts_per_batch = parseInt(NUMBER_PLAYOUTS / num_batches); 
-                        if (playouts_per_batch == 0) { // user selected less than 100 playouts
-                            num_batches = NUMBER_PLAYOUTS;
-                            playouts_per_batch = 1;
-                        }
-
-                        const ai_progress = document.getElementById("ai_progress");
-                        const chances_to_win_elem = document.getElementById("chances_to_win");
-                        ai_progress.value = 0;
-                        var diff_wins_distribution = null;
-
-                        // Crazy way from stack-overflow how to update the progress bar during calculations.
-                        // Web pogramming is sooo weird...
-                        var loop = function (batch, played_playouts) {
-                            // console.log("Batch: " + batch + " played_playouts: " + played_playouts + " playouts_per_batch: " + playouts_per_batch + " diff_wins_distribution: " + diff_wins_distribution, " num_batches: " + num_batches);
-                            if (batch == num_batches - 1) {
-                                playouts_per_batch = NUMBER_PLAYOUTS - played_playouts;
-                            }
-                            let tmp = ai.evaluate_state_for_next_move(currstate, playouts_per_batch);
-                            let tmp_diffs = new Int32Array(wasmobj.memory.buffer, tmp, 2*FIELD_WIDTH);
-                            if (diff_wins_distribution == null) {
-                                diff_wins_distribution = tmp_diffs.slice();
-                            } else {
-                                for (let index = 0; index < tmp_diffs.length; index++) {
-                                    const element = tmp_diffs[index];
-                                    diff_wins_distribution[index] += element;                                        
-                                }
-                            }
-                            
-                            played_playouts += playouts_per_batch;                                
-
-                            // update progress bar
-                            // --------------
-                            ai_progress.value = parseInt(played_playouts / NUMBER_PLAYOUTS * 100); 
-                            ai_progress.setAttribute('data-content', 'Played ' + ai_progress.value + ' playouts'); 
-                            // --------------
-
-
-                            if (batch < num_batches) {
-                                setTimeout(function () {
-                                    loop(batch + 1, played_playouts)
-                                }, 1); 
-                            } else {
-                                // Tada! AI is ready with evaluations and we can start checking for the best move.
-                                // What AI provides is an array of nunbers - one number per field. This number states how often
-                                // AI would win from this location if both - AI and player - would play random games starting from this
-                                // location until someone wins. Negative value N means that the player would win N times more then the AI.
-                                // Positive number P means that AI would win P times more then the human player.
-                                // Best position is therefore the one with hightest P value.
-                                // 
-                                // This strategy may seems weird but it works really well in this simple game.
-                                console.log("After doing AI step, the winner diff is: " + diff_wins_distribution);
-                                let max_value = -NUMBER_PLAYOUTS-1;
-                                let max_index = 0;
-                                for (let index = 0; index < diff_wins_distribution.length; index++) {
-                                    const value_at_index = diff_wins_distribution[index];
-                                    if ((value_at_index > max_value) && (newstate.get_number_stones_at(1, index) > 0)) {
-                                        max_value = value_at_index;
-                                        max_index = index;
-                                    }
-                                }
-                                console.log("Choose best position: " + max_index);
-                                let new_state_after_ai_move = newstate.make_move_wasm(max_index);                    
-                                update_field_representation(new_state_after_ai_move);
-                                if (new_state_after_ai_move.game_over()) {
-                                    alert("Game over! Winner is Computer!");
-                                }
-                                currstate = new_state_after_ai_move;
-                                console.log("After doing AI step, the state is: " + new_state_after_ai_move.render());
-
-                                var win_chances_ai = 0;
-                                var win_chances_player = 0;
-                                for (let index = 0; index < diff_wins_distribution.length; index++) {
-                                    const v = diff_wins_distribution[index];
-                                    if (v < 0) {
-                                        win_chances_player += diff_wins_distribution[index];
-                                    } else {
-                                        win_chances_ai += diff_wins_distribution[index];
-                                    }
-
-                                }
-                                chances_to_win_elem.innerHTML = "Chances to win: (Computer) " + win_chances_ai + " vs " + (-win_chances_player) + " (Player)" 
-                            }
-                        }
-                                            
-                        loop(0, 0);
+                        // now, we wait for other player to make a move
+                        send_move(position);
                     } catch (error) {
-                        console.log("Error while making AI move: " + error);
+                        console.log("Error while sending the move to the server: " + error);
                     }
                     
                 }

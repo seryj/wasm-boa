@@ -1,6 +1,7 @@
 #![feature(test)]
 
 mod ai;
+mod connmanager;
 
 extern crate console_error_panic_hook;
 // mod ai;
@@ -8,6 +9,9 @@ extern crate console_error_panic_hook;
 use std::fmt::{Display, Formatter};
 
 use wasm_bindgen::prelude::*;
+
+use web_sys::{ErrorEvent, MessageEvent};
+use wasm_bindgen::JsCast;
 
 #[wasm_bindgen]
 extern "C" {
@@ -304,6 +308,7 @@ impl GameState {
     pub fn render(&self) -> String {
         self.to_string()
     }
+
 }
 
 impl Display for GameState {
@@ -326,7 +331,7 @@ impl Display for GameState {
 
 #[cfg(test)]
 mod tests {
-    extern crate test;
+    // extern crate test;
 
     use crate::{Direction, GameState,MoveStatistic, OnePlayersField,};
     use wasm_bindgen_test::*;
@@ -357,6 +362,7 @@ mod tests {
                     ],
                 },
             ],
+            
         };
 
         let new_state = gamestate1.make_move(3);
@@ -535,7 +541,7 @@ mod tests {
     }
 
     use crate::ai::{AI, get_random_number, game_playout};
-    use self::test::Bencher;
+    // use self::test::Bencher;
 
 
     #[wasm_bindgen_test]
@@ -595,35 +601,35 @@ mod tests {
         }
     }
 
-    #[bench]
-    fn bench_one_move(b: &mut Bencher) {
-        b.iter(|| {
-            let game = GameState::default(); // beginning of the game
-            match game.make_move(0) {
-                Ok(_) => (),
-                Err(_) => ()
-            }
-        });
-    }
+    // #[bench]
+    // fn bench_one_move(b: &mut Bencher) {
+    //     b.iter(|| {
+    //         let game = GameState::default(); // beginning of the game
+    //         match game.make_move(0) {
+    //             Ok(_) => (),
+    //             Err(_) => ()
+    //         }
+    //     });
+    // }
 
-    #[bench]
-    fn bench_playout_from_full_field(b: &mut Bencher) {
-        b.iter(|| {
-            let n = test::black_box(1);
-            for _ in 0..n {
-                let game = GameState::default(); // beginning of the game
-                let _winner = game_playout(game, Some(1), None);
-            }
-        });
-    }
+    // #[bench]
+    // fn bench_playout_from_full_field(b: &mut Bencher) {
+    //     b.iter(|| {
+    //         let n = test::black_box(1);
+    //         for _ in 0..n {
+    //             let game = GameState::default(); // beginning of the game
+    //             let _winner = game_playout(game, Some(1), None);
+    //         }
+    //     });
+    // }
 
-    #[bench]
-    fn create_random_number(b: &mut Bencher) {
-        b.iter(|| {
-            let n = test::black_box(1);
-            for _ in 0..n {
-                get_random_number(0, 10);
-            }
-        });
-    }
+    // #[bench]
+    // fn create_random_number(b: &mut Bencher) {
+    //     b.iter(|| {
+    //         let n = test::black_box(1);
+    //         for _ in 0..n {
+    //             get_random_number(0, 10);
+    //         }
+    //     });
+    // }
 }

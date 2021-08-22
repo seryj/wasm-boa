@@ -1,0 +1,26 @@
+[package]
+name = "backend"
+version = "0.1.0"
+authors = ["seryj <lapuh@gmx.de>"]
+edition = "2018"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+#actix-web-actors = "3"
+#actix-web = "3"
+#actix = "0.10"
+# diesel = "1.4.5"
+zmq = "0.9.2"
+serde = {version="1.0" , features = ["derive"]}
+serde_json = "1.0"
+serde_repr = "0.1"
+boalib = {path = "../boalib"}
+
+[[bin]]
+path = "src/server.rs"
+name = "server"
+
+[[bin]]
+path = "src/client.rs"
+name = "client"
